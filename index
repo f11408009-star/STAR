@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎄 聖誕點燈挑戰賽 - 分數越高折扣越多！</title>
+    <style>
+        :root {
+            --bg-color: #0F2027;
+            --primary-red: #D42E2E;
+            --primary-green: #2F5D62;
+            --gold: #FFD700;
+            --text-white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: radial-gradient(circle at center, #203A43, #0F2027);
+            color: var(--text-white);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 雪花背景動畫 */
+        .snow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="2" fill="white" opacity="0.3"/></svg>');
+            animation: snow-fall 20s linear infinite;
+        }
+
+        @keyframes snow-fall {
+            from { background-position: 0 0; }
+            to { background-position: 0 500px; }
+        }
+
+        /* 遊戲容器 */
+        .game-container {
+            width: 90%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            z-index: 10;
+            text-align: center;
+            position: relative;
+            transition: height 0.3s ease;
+        }
+
+        /* 聖誕樹視覺 */
+        .tree-wrapper {
+            position: relative;
+            width: 120px;
+            height: 160px;
+            margin: 0 auto 20px;
+            transition: filter 0.5s ease;
+            filter: brightness(0.4) grayscale(0.8); /* 初始暗淡 */
+        }
+        
+        .tree-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 燈光等級 */
+        .tree-level-1 { filter: brightness(0.6) grayscale(0.5); }
+        .tree-level-2 { filter: brightness(0.8) grayscale(0.2); }
+        .tree-level-3 { filter: brightness(1.0) grayscale(0) drop-shadow(0 0 10px gold); }
+        .tree-level-max { filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 20px gold); animation: glow 1.5s infinite alternate; }
+
+        @keyframes glow {
+            from { filter: brightness(1.2) drop-shadow(0 0 15px gold); }
+            to { filter: brightness(1.4) drop-shadow(0 0 30px gold); }
+        }
+
+        /* 介面元素 */
+        h1, h2 { margin: 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .btn {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            width: 80%;
+            margin: 10px auto;
+            display: block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn:hover { background: #ff4747; }
+        
+        .option-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            text-align: left;
+            padding: 15px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        /* 狀態顯示 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        .score-display { color: var(--gold); font-weight: bold; font-size: 1.2rem; }
+
+        /* 計時條 */
+        .timer-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .timer-fill {
+            height: 100%;
+            background: var(--gold);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* 結果頁折扣碼 */
+        .coupon-card {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .coupon-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(90deg, var(--primary-red), var(--primary-green));
+        }
+        .discount-code {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-red);
+            border: 2px dashed #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .discount-desc { font-size: 0.9rem; color: #666; }
+
+        /* 隱藏 */
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="snow"></div>
+
+    <div class="game-container">
+        
+        <!-- 聖誕樹 (SVG) -->
+        <div class="tree-wrapper" id="treeVisual">
+            <svg class="tree-svg" viewBox="0 0 100 130">
+                <!-- 樹幹 -->
+                <rect x="45" y="110" width="10" height="20" fill="#5D4037" />
+                <!-- 樹葉 -->
+                <path d="M50 20 L20 60 L80 60 Z" fill="#2E7D32" />
+                <path d="M50 40 L15 90 L85 90 Z" fill="#2E7D32" />
+                <path d="M50 60 L10 110 L90 110 Z" fill="#388E3C" />
+                <!-- 星星 -->
+                <path d="M50 5 L53 15 L63 15 L55 22 L58 32 L50 26 L42 32 L45 22 L37 15 L47 15 Z" fill="#FFD700" />
+                <!-- 裝飾球 (初始看不見，靠CSS控制亮度) -->
+                <circle cx="30" cy="70" r="3" fill="red" />
+                <circle cx="70" cy="80" r="3" fill="gold" />
+                <circle cx="50" cy="50" r="3" fill="cyan" />
+                <circle cx="40" cy="100" r="3" fill="orange" />
+                <circle cx="60" cy="95" r="3" fill="white" />
+            </svg>
+        </div>
+
+        <!-- 1. 開始畫面 -->
+        <div id="startScreen">
+            <h1>🎅 聖誕搶分賽</h1>
+            <p>回答越快，分數越高，折扣越多！</p>
+            <div style="font-size: 0.8rem; margin: 20px 0; color: #ddd;">
+                <p>🏆 400分以上：<strong>8 折</strong></p>
+                <p>🥈 200分以上：<strong>9 折</strong></p>
+                <p>🥉 參加獎：<strong>95 折</strong></p>
+            </div>
+            <button class="btn" onclick="game.start()">開始挑戰</button>
+        </div>
+
+        <!-- 2. 遊戲畫面 -->
+        <div id="gameScreen" class="hidden">
+            <div class="status-bar">
+                <span>題目: <span id="qCount">1/5</span></span>
+                <span>分數: <span id="scoreVal" class="score-display">0</span></span>
+            </div>
+            <div class="timer-bar"><div class="timer-fill" id="timerBar"></div></div>
+            
+            <h3 id="questionText" style="min-height: 60px;">題目載入中...</h3>
+            <div id="optionsContainer">
+                <!-- 選項按鈕 -->
+            </div>
+        </div>
+
+        <!-- 3. 結算畫面 -->
+        <div id="resultScreen" class="hidden">
+            <h2>🎉 挑戰結束！</h2>
+            <p>你的總分是：<span id="finalScore" class="score-display">0</span></p>
+            
+            <div class="coupon-card">
+                <div id="rewardTitle">恭喜獲得折扣碼</div>
+                <div class="discount-code" id="codeDisplay" onclick="game.copyCode()">Loading...</div>
+                <p class="discount-desc">點擊上方代碼複製，結帳時使用</p>
+            </div>
+
+            <button class="btn" onclick="location.reload()" style="margin-top:20px; background:#555;">再玩一次刷高分</button>
+        </div>
+
+    </div>
+
+    <script>
+        const QUESTIONS = [
+            { q: "聖誕老人的雪橇是由什麼動物拉的？", options: ["哈士奇", "馴鹿", "北極熊", "袋鼠"], ans: 1 },
+            { q: "傳統聖誕樹頂端通常會放什麼？", options: ["星星", "南瓜", "襪子", "甜甜圈"], ans: 0 },
+            { q: "聖誕節是為了慶祝誰的誕生？", options: ["聖誕老人", "耶穌", "華盛頓", "麋鹿魯道夫"], ans: 1 },
+            { q: "知名的紅鼻子馴鹿叫什麼名字？", options: ["湯姆", "傑利", "魯道夫", "史努比"], ans: 2 },
+            { q: "聖誕老人通常從哪裡進入房子送禮物？", options: ["大門", "窗戶", "煙囪", "排水管"], ans: 2 }
+        ];
+
+        // 設定獎勵級距
+        const REWARDS = {
+            TIER_1: { minScore: 400, code: "XMAS-SUPER-20", text: "尊榮 8 折優惠" },
+            TIER_2: { minScore: 200, code: "XMAS-JOY-10", text: "歡樂 9 折優惠" },
+            TIER_3: { minScore: 0,   code: "XMAS-NICE-05", text: "暖心 95 折優惠" }
+        };
+
+        const game = {
+            score: 0,
+            currentQ: 0,
+            timer: null,
+            timeLeft: 10, // 每題幾秒
+            maxTime: 10,
+            
+            start: function() {
+                this.score = 0;
+                this.currentQ = 0;
+                document.getElementById('startScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                this.loadQuestion();
+            },
+
+            loadQuestion: function() {
+                if (this.currentQ >= QUESTIONS.length) {
+                    this.endGame();
+                    return;
+                }
+
+                const qData = QUESTIONS[this.currentQ];
+                document.getElementById('qCount').innerText = `${this.currentQ + 1}/${QUESTIONS.length}`;
+                document.getElementById('questionText').innerText = qData.q;
+                
+                const container = document.getElementById('optionsContainer');
+                container.innerHTML = '';
+
+                qData.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn option-btn';
+                    btn.innerText = opt;
+                    btn.onclick = () => this.checkAnswer(idx);
+                    container.appendChild(btn);
+                });
+
+                // 重置並啟動計時器
+                this.startTimer();
+            },
+
+            startTimer: function() {
+                this.timeLeft = this.maxTime;
+                const bar = document.getElementById('timerBar');
+                bar.style.transition = 'none';
+                bar.style.width = '100%';
+                
+                // 強制重繪
+                void bar.offsetWidth;
+
+                bar.style.transition = `width ${this.maxTime}s linear`;
+                bar.style.width = '0%';
+
+                if(this.timer) clearInterval(this.timer);
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    if(this.timeLeft <= 0) {
+                        this.checkAnswer(-1); // 時間到，傳入錯誤索引
+                    }
+                }, 1000);
+            },
+
+            checkAnswer: function(selectedIndex) {
+                clearInterval(this.timer);
+                const correctIndex = QUESTIONS[this.currentQ].ans;
+
+                if (selectedIndex === correctIndex) {
+                    // 計算分數：基礎分 50 + 時間加成 (剩餘秒數 * 10)
+                    // 最高分每題約 150 分
+                    const points = 50 + (this.timeLeft * 10);
+                    this.score += points;
+                    this.flashFeedback(true);
+                } else {
+                    this.flashFeedback(false);
+                }
+
+                this.updateUI();
+                
+                // 延遲後進入下一題
+                setTimeout(() => {
+                    this.currentQ++;
+                    this.loadQuestion();
+                }, 800);
+            },
+
+            flashFeedback: function(isCorrect) {
+                const container = document.querySelector('.game-container');
+                const originalBg = container.style.background;
+                container.style.background = isCorrect ? 'rgba(46, 204, 113, 0.3)' : 'rgba(231, 76, 60, 0.3)';
+                setTimeout(() => {
+                    container.style.background = originalBg;
+                }, 300);
+            },
+
+            updateUI: function() {
+                // 更新分數顯示
+                const scoreEl = document.getElementById('scoreVal');
+                scoreEl.innerText = this.score;
+
+                // 更新聖誕樹亮度 (根據分數百分比)
+                // 假設滿分大約是 750 分
+                const tree = document.getElementById('treeVisual');
+                tree.className = 'tree-wrapper'; // 重置
+                
+                if (this.score > 400) tree.classList.add('tree-level-max');
+                else if (this.score > 200) tree.classList.add('tree-level-3');
+                else if (this.score > 100) tree.classList.add('tree-level-2');
+                else if (this.score > 0) tree.classList.add('tree-level-1');
+            },
+
+            endGame: function() {
+                document.getElementById('gameScreen').classList.add('hidden');
+                document.getElementById('resultScreen').classList.remove('hidden');
+                document.getElementById('finalScore').innerText = this.score;
+
+                // 決定獎勵
+                let reward = REWARDS.TIER_3; // 預設最低
+                if (this.score >= REWARDS.TIER_1.minScore) reward = REWARDS.TIER_1;
+                else if (this.score >= REWARDS.TIER_2.minScore) reward = REWARDS.TIER_2;
+
+                document.getElementById('rewardTitle').innerText = reward.text;
+                document.getElementById('codeDisplay').innerText = reward.code;
+            },
+
+            copyCode: function() {
+                const code = document.getElementById('codeDisplay').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('已複製折扣碼：' + code);
+                });
+            }
+        };
+    </script>
+</body>
+</html>
